@@ -33,6 +33,17 @@ jobs:
 
     steps:
       - run: echo "Run integration tests"
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          #cache beallitas
+          cache: 'maven' #mavent irod, akkor tudja melyiknek kell a cahcba berakni
+      - name: Build with Maven
+        run: ./mvnw -B verify
       
   build-image:
     runs-on: ubuntu-latest
