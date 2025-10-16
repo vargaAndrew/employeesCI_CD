@@ -26,8 +26,16 @@ jobs:
           cache: 'maven' #mavent irod, akkor tudja melyiknek kell a cahcba berakni
       - name: Build with Maven
         run: ./mvnw -B package # -B: batch mode, hogy ne kérdezzen semmit
+        #az eloallitott jart le kell tarolnunk az artifactba
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: employees-jar
+          path: target/employees-*.jar #az * helyere jon a verzioszam
 
   integration-tests:
+    #ha true-ra van allitva akkor lefut, ha false-ra akkor nem
+    if: false
     runs-on: ubuntu-latest
     needs: build #ez a job csak akkor fut le, ha a build sikeres volt
     env:
@@ -67,9 +75,37 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     needs: build #ez a job csak akkor fut le, ha a build sikeres volt
-
+    permissions:
+      contents: read #read permission kell a checkout-hoz
+      packages: write #write permission hogy tudjak irni a container registry-be
     steps:
       - run: echo "Build Docker images"
+      #toltsuk le az artifactba feltoltott jar-t
+  
+      #ez letolti a kodot a repobol
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: employees-jar
+          #target konyvtarba tolti le
+          path: target/
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          #github actor a github felhasznalonev
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.layers
+          push: true
+          #ez lesz a docker image (ez docker tag nem a github tag) neve lesz
+          tags: ghcr.io/${{ github.repository }}:latest
       
   deploy:
     runs-on: ubuntu-latest
