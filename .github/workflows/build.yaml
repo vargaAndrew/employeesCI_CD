@@ -12,6 +12,8 @@ jobs:
   build:
   #ez gyakorlatilag egy docker image 
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
 
     #steppek, amik a containerben lefutnak
     steps:
@@ -24,8 +26,14 @@ jobs:
           java-version: '21'
           #cache beallitas
           cache: 'maven' #mavent irod, akkor tudja melyiknek kell a cahcba berakni
+      - name: Set version
+        id: set_version
+        run: |
+          VERSION="1.0.0-${GITHUB_RUN_NUMBER}"
+          echo "Version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  
       - name: Build with Maven
-        run: ./mvnw -B package # -B: batch mode, hogy ne kérdezzen semmit
+        run: ./mvnw -B package -Dbuild.number=${{ env.VERSION }} # -B: batch mode, hogy ne kérdezzen semmit
         #az eloallitott jart le kell tarolnunk az artifactba
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
@@ -91,6 +99,10 @@ jobs:
           name: employees-jar
           #target konyvtarba tolti le
           path: target/
+      - name: Read version from build job
+        run: |
+          echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_ENV
+          echo "Version from build job: $VERSION"    
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -105,7 +117,7 @@ jobs:
           file: ./Dockerfile.layers
           push: true
           #ez lesz a docker image (ez docker tag nem a github tag) neve lesz
-          tags: ghcr.io/vargaandrew/employeesci_cd:latest
+          tags: ghcr.io/vargaandrew/employeesci_cd:latest, ghcr.io/vargaandrew/employeesci_cd:${{ env.VERSION }}
       
   deploy:
     runs-on: ubuntu-latest
