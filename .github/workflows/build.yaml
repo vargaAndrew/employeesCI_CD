@@ -15,6 +15,12 @@ jobs:
 
     #steppek, amik a containerben lefutnak
     steps:
-      #run a legegzegyszerűbb step ket attributuma van a run es a name
-      - name: Say Hello
-        run: echo "Hello GitHub Actions"
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Build with Maven
+        run: ./mvnw -B package # -B: batch mode, hogy ne kérdezzen semmit
