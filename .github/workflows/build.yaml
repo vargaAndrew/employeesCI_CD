@@ -1,0 +1,20 @@
+name: Build
+
+#ide kell felsorolni az eventeket
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    
+jobs:
+  build:
+  #ez gyakorlatilag egy docker image 
+    runs-on: ubuntu-latest
+
+    #steppek, amik a containerben lefutnak
+    steps:
+      #run a legegzegyszerűbb step ket attributuma van a run es a name
+      - name: Say Hello
+        run: echo "Hello GitHub Actions"
