@@ -105,7 +105,7 @@ jobs:
           file: ./Dockerfile.layers
           push: true
           #ez lesz a docker image (ez docker tag nem a github tag) neve lesz
-          tags: ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/vargaandrew/employeesci_cd:latest
       
   deploy:
     runs-on: ubuntu-latest
